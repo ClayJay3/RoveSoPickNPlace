@@ -1,0 +1,167 @@
+{
+  "format": 1,
+  "restore": {
+    "/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Web/RoveSoPickNPlace.Web.csproj": {}
+  },
+  "projects": {
+    "/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Models/RoveSoPickNPlace.Models.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Models/RoveSoPickNPlace.Models.csproj",
+        "projectName": "RoveSoPickNPlace.Models",
+        "projectPath": "/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Models/RoveSoPickNPlace.Models.csproj",
+        "packagesPath": "/root/.nuget/packages/",
+        "outputPath": "/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Models/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/root/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Konscious.Security.Cryptography.Argon2": {
+              "target": "Package",
+              "version": "[1.3.1, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.410/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Web/RoveSoPickNPlace.Web.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Web/RoveSoPickNPlace.Web.csproj",
+        "projectName": "RoveSoPickNPlace.Web",
+        "projectPath": "/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Web/RoveSoPickNPlace.Web.csproj",
+        "packagesPath": "/root/.nuget/packages/",
+        "outputPath": "/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Web/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/root/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Models/RoveSoPickNPlace.Models.csproj": {
+                "projectPath": "/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Models/RoveSoPickNPlace.Models.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Blazored.Toast": {
+              "target": "Package",
+              "version": "[4.2.1, )"
+            },
+            "IrregularTerrainModel": {
+              "target": "Package",
+              "version": "[1.0.0.37, )"
+            },
+            "LeafletForBlazor": {
+              "target": "Package",
+              "version": "[2.0.6.8, )"
+            },
+            "Microsoft.AspNetCore.Components.WebAssembly.Server": {
+              "target": "Package",
+              "version": "[8.0.6, )"
+            },
+            "Radzen.Blazor": {
+              "target": "Package",
+              "version": "[6.1.2, )"
+            },
+            "System.Drawing.Common": {
+              "target": "Package",
+              "version": "[4.7.2, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[8.6.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.410/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

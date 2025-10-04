@@ -82,7 +82,7 @@ RUN chsh -s /usr/bin/fish && \
 # Set Labels
 LABEL authors="ClayJay3 (claytonraycowen@gmail.com)"
 LABEL maintainer="Craysoftware"
-LABEL org.opencontainers.image.source="https://github.com/clayjay3/kroft"
+LABEL org.opencontainers.image.source="https://github.com/clayjay3/RoveSoPickNPlace"
 LABEL org.opencontainers.image.licenses="GPL-3.0-only"
 LABEL org.opencontainers.image.version="v0.0.1"
 LABEL org.opencontainers.image.description="Docker Image for Ubuntu Blazor Server Development"

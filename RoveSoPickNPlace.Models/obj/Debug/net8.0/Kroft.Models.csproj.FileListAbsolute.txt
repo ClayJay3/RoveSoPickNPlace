@@ -1,0 +1,13 @@
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Models/bin/Debug/net8.0/RoveSoPickNPlace.Models.deps.json
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Models/bin/Debug/net8.0/RoveSoPickNPlace.Models.dll
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Models/bin/Debug/net8.0/RoveSoPickNPlace.Models.pdb
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Models/obj/Debug/net8.0/RoveSoPickNPlace.Models.csproj.AssemblyReference.cache
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Models/obj/Debug/net8.0/RoveSoPickNPlace.Models.GeneratedMSBuildEditorConfig.editorconfig
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Models/obj/Debug/net8.0/RoveSoPickNPlace.Models.AssemblyInfoInputs.cache
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Models/obj/Debug/net8.0/RoveSoPickNPlace.Models.AssemblyInfo.cs
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Models/obj/Debug/net8.0/RoveSoPickNPlace.Models.csproj.CoreCompileInputs.cache
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Models/obj/Debug/net8.0/RoveSoPickNPlace.Models.sourcelink.json
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Models/obj/Debug/net8.0/RoveSoPickNPlace.Models.dll
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Models/obj/Debug/net8.0/refint/RoveSoPickNPlace.Models.dll
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Models/obj/Debug/net8.0/RoveSoPickNPlace.Models.pdb
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Models/obj/Debug/net8.0/ref/RoveSoPickNPlace.Models.dll

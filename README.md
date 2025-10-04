@@ -1,14 +1,14 @@
-# Kroft Software
+# RoveSoPickNPlace Software
 
-Kroft Software is a multi-tier application designed to manage and interact with a SQLite database using a REST API, a class library for object models, and a Blazor web application for the frontend. The project is structured into three main components:
+RoveSoPickNPlace Software is a multi-tier application designed to manage and interact with a SQLite database using a REST API, a class library for object models, and a Blazor web application for the frontend. The project is structured into three main components:
 
-- `Kroft.Api`: REST API for reading and writing data to a SQLite database.
-- `Kroft.Models`: A class library for storing all project object models.
-- `Kroft.Web`: The frontend Blazor web application.
+- `RoveSoPickNPlace.Api`: REST API for reading and writing data to a SQLite database.
+- `RoveSoPickNPlace.Models`: A class library for storing all project object models.
+- `RoveSoPickNPlace.Web`: The frontend Blazor web application.
 
 ## Project Structure
 
-### Kroft.Api
+### RoveSoPickNPlace.Api
 
 This project contains the REST API built using ASP.NET Core. It provides endpoints for CRUD (Create, Read, Update, Delete) operations on the SQLite database.
 
@@ -17,9 +17,9 @@ This project contains the REST API built using ASP.NET Core. It provides endpoin
   - `dotnet ef migrations add InitialDB`: Adds a new migration to create the initial database schema.
   - `dotnet ef database update`: Applies pending migrations to the database.
 
-For more info about the API, view the README.md in the Kroft.Api folder.
+For more info about the API, view the README.md in the RoveSoPickNPlace.Api folder.
 
-### Kroft.Models
+### RoveSoPickNPlace.Models
 
 This project is a class library that contains all the object models used throughout the application. These models represent the entities in the database and are shared across the API and web application.
 
@@ -27,7 +27,7 @@ This project is a class library that contains all the object models used through
 - **Key Concepts**:
   - **Models**: Represent the data structure and are used for database interaction.
 
-### Kroft.Web
+### RoveSoPickNPlace.Web
 
 This project is the frontend web application built using Blazor. Blazor is a framework for building interactive web UIs with C# instead of JavaScript. It comes in two flavors: Blazor Server and Blazor WebAssembly (WASM).
 
@@ -83,8 +83,8 @@ In Blazor WASM, the application runs in the browser using WebAssembly. The entir
 1. Clone the repository:
 
    ```sh
-   git clone https://github.com/MissouriMRDT/Kroft_Blazor.git
-   cd Kroft_Blazor
+   git clone https://github.com/MissouriMRDT/RoveSoPickNPlace_Blazor.git
+   cd RoveSoPickNPlace_Blazor
    ```
 
 2. Install Git LFS (if not already installed) and pull LFS files:
@@ -98,7 +98,7 @@ In Blazor WASM, the application runs in the browser using WebAssembly. The entir
 
 4. Open in the Devcontainer.
 
-### Running Kroft
+### Running RoveSoPickNPlace
 
 1) Once the devcontainer is open, navigate to the debug tool in the sidebar of VSCode.
 2) Click on the dropdown and select API, then click run.
