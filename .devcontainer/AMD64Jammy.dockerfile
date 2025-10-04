@@ -67,6 +67,11 @@ RUN wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh && \
     ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet && \
     rm dotnet-install.sh
 
+# Install Docker CLI (client) only
+RUN apt-get update && \
+    apt-get install -y docker.io && \
+    rm -rf /var/lib/apt/lists/*
+
 # Switch default shell to fish and set a minimal greeting
 RUN chsh -s /usr/bin/fish && \
     mkdir -p /root/.config/fish/ && \

@@ -1,51 +1,33 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
 {
-	"runArgs": [
-        // Name container.
-        "--name",
-        "RoveSoPickNPlace",
-        // Configure container to use the same network stack as the host machine.
-        "--network",
-        "host",
-        // Grants permission to the container to access USBs.
-        "--privileged"
-    ],
-    // Mount shared workspace volumes. Bind from host machine to container.
-    "mounts": [
-        
-    ],
-	// "image": "mcr.microsoft.com/devcontainers/base:jammy",
-	"build": {
-        "dockerfile": "AMD64Jammy.dockerfile"
-    },
-	// Configure tool-specific properties.
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"adrianwilczynski.blazor-snippet-pack",
-				"ms-dotnettools.csdevkit",
-				"ms-dotnettools.vscodeintellicode-csharp",
-				"kreativ-software.csharpextensions",
-				"k--kato.docomment",
-				"PKief.material-icon-theme",
-				"christian-kohler.path-intellisense",
-				"austincummings.razor-plus",
-				"GitHub.copilot",
-				"GitHub.copilot-chat"
-			]
-		}
-	},
-
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-
-	"postStartCommand": "git config --global --add safe.directory '*'",
-	"postCreateCommand": "dotnet tool install --global dotnet-ef --verbosity diagnostic && dotnet tool install --global dotnet-aspnet-codegenerator --verbosity diagnostic && fish -c 'set -U fish_user_paths $HOME/.dotnet/tools $fish_user_paths'"
-
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
+  "runArgs": [
+    "--name",
+    "RoveSoPickNPlace",
+    "--network",
+    "host",
+    "--privileged"
+  ],
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
+  "build": {
+    "dockerfile": "AMD64Jammy.dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "adrianwilczynski.blazor-snippet-pack",
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.vscodeintellicode-csharp",
+        "kreativ-software.csharpextensions",
+        "k--kato.docomment",
+        "PKief.material-icon-theme",
+        "christian-kohler.path-intellisense",
+        "austincummings.razor-plus",
+        "GitHub.copilot",
+        "GitHub.copilot-chat"
+      ]
+    }
+  },
+  "postStartCommand": "git config --global --add safe.directory '*'",
+  "postCreateCommand": "dotnet tool install --global dotnet-ef --verbosity diagnostic && dotnet tool install --global dotnet-aspnet-codegenerator --verbosity diagnostic && fish -c 'set -U fish_user_paths $HOME/.dotnet/tools $fish_user_paths'"
 }

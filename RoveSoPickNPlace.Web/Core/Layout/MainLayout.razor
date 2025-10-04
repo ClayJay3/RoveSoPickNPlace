@@ -3,8 +3,33 @@
 @inject CookieThemeService _CookieThemeService
 @inject NavigationManager NavigationManager
 @inject IToastService _ToastsService
+@inject ProtectedLocalStorage _ProtectedLocalStorage
+@inject ProtectedSessionStorage _ProtectedSessionStorage
 
 <PageTitle>RoveSoPickNPlace</PageTitle>
+
+<RadzenComponents />
+<RadzenLayout Style="grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body'">
+        <RadzenHeader>
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Style="width: 100%;">
+                <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="10">
+                    <RadzenLabel Text="Home Page" />
+                </RadzenStack>
+                <RadzenDropDown Name="ThemeDropDown" TValue="string" Value="@_ThemeService.Theme" ValueChanged="@ChangeTheme" Data="@Themes.Free" TextProperty=@nameof(Theme.Text) ValueProperty=@nameof(Theme.Value) />
+            </RadzenStack>
+            <BlazoredToasts ShowProgressBar="true" Timeout="5" />
+        </RadzenHeader>
+        <RadzenSidebar>
+            <RadzenPanelMenu>
+                <RadzenPanelMenuItem Text="Home" Icon="home" Path="/"/>
+            </RadzenPanelMenu>
+        </RadzenSidebar>
+    <RadzenBody>
+        <div class="rz-p-4">
+            @Body
+        </div>
+    </RadzenBody>
+</RadzenLayout>
 
 <div id="blazor-error-ui">
     An unhandled error has occurred.
@@ -14,29 +39,18 @@
 
 @code {
     // Declare a variable to control the sidebar state.
-    private bool sidebarExpanded = true;
-    private bool hasRestoredAuth = false;
-
     
     protected override void OnInitialized()
     {
-        _ToastsService.ShowInfo("TEST");
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && !hasRestoredAuth)
+        if (firstRender)
         {
             // Now it's safe to perform JS interop calls.
-            hasRestoredAuth = true;
-            // Call StateHasChanged to re-render the component if necessary.
             await InvokeAsync(StateHasChanged);
         }
-    }
-    private void ToggleSidebar()
-    {
-        // Toggle the sidebar state.
-        sidebarExpanded = !sidebarExpanded;
     }
 
     void ChangeTheme(string value)
