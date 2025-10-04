@@ -1,0 +1,13 @@
+/workspaces/Kroft/Kroft.Models/bin/Debug/net8.0/Kroft.Models.deps.json
+/workspaces/Kroft/Kroft.Models/bin/Debug/net8.0/Kroft.Models.dll
+/workspaces/Kroft/Kroft.Models/bin/Debug/net8.0/Kroft.Models.pdb
+/workspaces/Kroft/Kroft.Models/obj/Debug/net8.0/Kroft.Models.csproj.AssemblyReference.cache
+/workspaces/Kroft/Kroft.Models/obj/Debug/net8.0/Kroft.Models.GeneratedMSBuildEditorConfig.editorconfig
+/workspaces/Kroft/Kroft.Models/obj/Debug/net8.0/Kroft.Models.AssemblyInfoInputs.cache
+/workspaces/Kroft/Kroft.Models/obj/Debug/net8.0/Kroft.Models.AssemblyInfo.cs
+/workspaces/Kroft/Kroft.Models/obj/Debug/net8.0/Kroft.Models.csproj.CoreCompileInputs.cache
+/workspaces/Kroft/Kroft.Models/obj/Debug/net8.0/Kroft.Models.sourcelink.json
+/workspaces/Kroft/Kroft.Models/obj/Debug/net8.0/Kroft.Models.dll
+/workspaces/Kroft/Kroft.Models/obj/Debug/net8.0/refint/Kroft.Models.dll
+/workspaces/Kroft/Kroft.Models/obj/Debug/net8.0/Kroft.Models.pdb
+/workspaces/Kroft/Kroft.Models/obj/Debug/net8.0/ref/Kroft.Models.dll
