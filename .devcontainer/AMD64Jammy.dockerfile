@@ -67,13 +67,6 @@ RUN wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh && \
     ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet && \
     rm dotnet-install.sh
 
-# Install Metasploit
-RUN curl https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/templates/metasploit-framework-wrappers/msfupdate.erb \
-      -o msfinstall && \
-    chmod +x msfinstall && \
-    ./msfinstall && \
-    rm msfinstall
-
 # Switch default shell to fish and set a minimal greeting
 RUN chsh -s /usr/bin/fish && \
     mkdir -p /root/.config/fish/ && \

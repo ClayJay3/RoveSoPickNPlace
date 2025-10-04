@@ -12,9 +12,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddDbContext<RoveSoPickNPlaceDatabase>(options => options.UseSqlite(builder.Configuration.GetConnectionString("RED_DB")));
-builder.Services.AddDbContext<LiDARDatabase>(options => options.UseSqlite(builder.Configuration.GetConnectionString("LIDAR_DB")));
-builder.Services.AddScoped<IAccountsRepository, AccountsRepository>();
-builder.Services.AddScoped<ILiDARDataRepository, LiDARDataRepository>();
 
 
 builder.Services.AddEndpointsApiExplorer();
@@ -45,32 +42,6 @@ builder.Services.AddSwaggerGen(opt =>
             new string[]{}
         }
     });
-});
-
-// Configure JWT authentication
-var jwtKey = builder.Configuration["Jwt:Key"];
-if (string.IsNullOrEmpty(jwtKey))
-{
-    throw new InvalidOperationException("JWT Key is not configured.");
-}
-var key = Encoding.ASCII.GetBytes(jwtKey);
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(key)
-    };
 });
 
 var app = builder.Build();

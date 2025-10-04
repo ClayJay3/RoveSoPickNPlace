@@ -24,8 +24,6 @@ builder.Services.AddRadzenCookieThemeService(options =>
         });
 // Add the services.
 builder.Services.AddScoped<CookieService>();
-builder.Services.AddHttpClient<AccountsService>();
-builder.Services.AddScoped<AccountsService>();
 
 // HttpClient for API requests.
 var baseApiUrl = builder.Configuration["ApiSettings:BaseUrl"];

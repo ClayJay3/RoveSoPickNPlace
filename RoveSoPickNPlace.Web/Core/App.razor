@@ -1,5 +1,4 @@
-﻿@inject AccountsService _AccountsService
-@using Microsoft.AspNetCore.Components.Authorization
+﻿@using Microsoft.AspNetCore.Components.Authorization
 
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="light">
@@ -28,10 +27,10 @@
 
 @code {
     [CascadingParameter]
-    private HttpContext HttpContext { get; set; }
+    private HttpContext? HttpContext { get; set; }
 
     [Inject]
-    private ThemeService ThemeService { get; set; }
+    private ThemeService? ThemeService { get; set; }
 
     protected override void OnInitialized()
     {
@@ -43,7 +42,7 @@
 
             if (!string.IsNullOrEmpty(theme))
             {
-                ThemeService.SetTheme(theme, false);
+                ThemeService?.SetTheme(theme, false);
             }
         }
     }
