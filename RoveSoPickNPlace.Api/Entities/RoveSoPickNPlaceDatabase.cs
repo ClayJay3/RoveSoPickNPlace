@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Newtonsoft.Json.Bson;
+using RoveSoPickNPlace.Models.Entities;
 
 namespace RoveSoPickNPlace.Api.Entities
 {
@@ -33,7 +34,17 @@ namespace RoveSoPickNPlace.Api.Entities
         /// entities in a context. In this case is corresponds to a database table.
         /// </summary>
         /// <value></value>
-        // public DbSet<UserProfile> UserProfiles { get; set; }
+        public DbSet<Job> Jobs { get; set; }
+        public DbSet<UploadedFile> UploadedFiles { get; set; }
+        public DbSet<ComponentDefinition> ComponentDefinitions { get; set; }
+        public DbSet<Feeder> Feeders { get; set; }
+        public DbSet<ComponentPlacementRecord> ComponentPlacements { get; set; }
+        public DbSet<InspectionResult> InspectionResults { get; set; }
+        public DbSet<BOMEntry> BomEntries { get; set; }
+        public DbSet<VisionCalibration> VisionCalibrations { get; set; }
+        public DbSet<CameraFeed> CameraFeeds { get; set; }
+        public DbSet<LogEntry> LogEntries { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         /// <summary>
         /// Configure the primary key for the UserProfiles table.
@@ -57,34 +68,131 @@ namespace RoveSoPickNPlace.Api.Entities
         {
             base.OnModelCreating(modelBuilder);
 
-            /*
-                Always make sure a default admin user is created.
-            */
-            // modelBuilder.Entity<UserProfile>().HasData(
-            //     new UserProfile
-            //     {
-            //         ID = new Guid("61889689-5a72-40ec-bf80-560b85d5775b"),
-            //         Username = "admin",
-            //         Email = "admin@example.com",
-            //         HashedPassword = "JGSbvfD04Sc5pxiNgfb4ow==",
-            //         Salt = "bJZ9DdwaYkrQQ8/S+Opj/A==",
-            //         Argon2DegreeOfParallelism = 4,
-            //         Argon2Iterations = 4,
-            //         Argon2MemorySize = 1024 * 64,
-            //         FirstName = "Admin",
-            //         LastName = "User",
-            //         DateOfBirth = new DateTime(1980, 1, 1),
-            //         PhoneNumber = "123-456-7890",
-            //         Address = "123 Admin St",
-            //         City = "Admin City",
-            //         State = "Admin State",
-            //         PostalCode = "12345",
-            //         Country = "Admin Country",
-            //         CreatedAt = DateTime.MinValue,
-            //         UpdatedAt = DateTime.MinValue,
-            //         PermissionLevel = PermissionLevel.Admin
-            //     }
-            // );
+            /// <summary>
+            /// Configure the primary key for each table.
+            /// </summary>
+
+            // Job
+            modelBuilder.Entity<Job>(entity =>
+            {
+                entity.HasKey(x => x.ID);
+                entity.Property(x => x.ID)
+                    .HasColumnName("ID")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd();
+            });
+
+            // UploadedFile
+            modelBuilder.Entity<UploadedFile>(entity =>
+            {
+                entity.HasKey(x => x.ID);
+                entity.Property(x => x.ID)
+                    .HasColumnName("ID")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd();
+            });
+
+            // ComponentDefinition
+            modelBuilder.Entity<ComponentDefinition>(entity =>
+            {
+                entity.HasKey(x => x.ID);
+                entity.Property(x => x.ID)
+                    .HasColumnName("ID")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd();
+            });
+
+            // Feeder
+            modelBuilder.Entity<Feeder>(entity =>
+            {
+                entity.HasKey(x => x.ID);
+                entity.Property(x => x.ID)
+                    .HasColumnName("ID")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd();
+            });
+
+            // ComponentPlacementRecord
+            modelBuilder.Entity<ComponentPlacementRecord>(entity =>
+            {
+                entity.HasKey(x => x.ID);
+                entity.Property(x => x.ID)
+                    .HasColumnName("ID")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd();
+            });
+
+            // InspectionResult
+            modelBuilder.Entity<InspectionResult>(entity =>
+            {
+                entity.HasKey(x => x.ID);
+                entity.Property(x => x.ID)
+                    .HasColumnName("ID")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd();
+            });
+
+            // BomEntry
+            modelBuilder.Entity<BOMEntry>(entity =>
+            {
+                entity.HasKey(x => x.ID);
+                entity.Property(x => x.ID)
+                    .HasColumnName("ID")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd();
+            });
+
+            // VisionCalibration
+            modelBuilder.Entity<VisionCalibration>(entity =>
+            {
+                entity.HasKey(x => x.ID);
+                entity.Property(x => x.ID)
+                    .HasColumnName("ID")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd();
+            });
+
+            // CameraFeed
+            modelBuilder.Entity<CameraFeed>(entity =>
+            {
+                entity.HasKey(x => x.ID);
+                entity.Property(x => x.ID)
+                    .HasColumnName("ID")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd();
+            });
+
+            // LogEntry
+            modelBuilder.Entity<LogEntry>(entity =>
+            {
+                entity.HasKey(x => x.ID);
+                entity.Property(x => x.ID)
+                    .HasColumnName("ID")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd();
+            });
+
+            // Notification
+            modelBuilder.Entity<Notification>(entity =>
+            {
+                entity.HasKey(x => x.ID);
+                entity.Property(x => x.ID)
+                    .HasColumnName("ID")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd();
+            });
+
+            // ManualControlCommand
+            modelBuilder.Entity<ManualControlCommand>(entity =>
+            {
+                entity.HasKey(x => x.ID);
+                entity.Property(x => x.ID)
+                    .HasColumnName("ID")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd();
+            });
+
+            modelBuilder.Owned<Position>();
         }
     }
 }
