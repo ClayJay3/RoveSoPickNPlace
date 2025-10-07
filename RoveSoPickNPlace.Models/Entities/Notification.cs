@@ -14,7 +14,7 @@ namespace RoveSoPickNPlace.Models.Entities
         public Guid ID { get; set; }
         public LogLevel? Level { get; set; }
         public string? Message { get; set; }
-        public DateTime? CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool? Resolved { get; set; }
         public DateTime? ResolvedAt { get; set; }
     }

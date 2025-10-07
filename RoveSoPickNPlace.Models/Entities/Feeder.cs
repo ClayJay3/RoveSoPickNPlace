@@ -13,12 +13,17 @@ namespace RoveSoPickNPlace.Models.Entities
     {
         public Guid ID { get; set; }
         public int? SlotNumber { get; set; }             // 1..N
-        public Guid? ComponentDefinitionId { get; set; }
+
+        // component definition
+        public Guid ComponentDefinitionId { get; set; }
         public ComponentDefinition? ComponentDefinition { get; set; }
+
         public FeederStatus? Status { get; set; }
         public bool? IsLoaded { get; set; }
         public int? RemainingCount { get; set; }         // Optional
         public DateTime? LastLoadedAt { get; set; }
+
+        // owned position
         public Position? PickupPosition { get; set; }
     }
 }

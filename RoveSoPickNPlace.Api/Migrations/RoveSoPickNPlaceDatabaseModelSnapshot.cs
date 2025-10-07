@@ -41,6 +41,8 @@ namespace RoveSoPickNPlace.Api.Migrations
 
                     b.HasKey("ID");
 
+                    b.HasIndex("JobID");
+
                     b.ToTable("BomEntries");
                 });
 
@@ -129,7 +131,7 @@ namespace RoveSoPickNPlace.Api.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("ID");
 
-                    b.Property<Guid>("ComponentDefinitionID")
+                    b.Property<Guid?>("ComponentDefinitionID")
                         .HasColumnType("TEXT");
 
                     b.Property<bool?>("CorrectionApplied")
@@ -137,9 +139,6 @@ namespace RoveSoPickNPlace.Api.Migrations
 
                     b.Property<int?>("FeederSlot")
                         .HasColumnType("INTEGER");
-
-                    b.Property<Guid?>("InspectionResultID")
-                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("JobID")
                         .HasColumnType("TEXT");
@@ -170,7 +169,7 @@ namespace RoveSoPickNPlace.Api.Migrations
 
                     b.HasKey("ID");
 
-                    b.HasIndex("InspectionResultID");
+                    b.HasIndex("ComponentDefinitionID");
 
                     b.HasIndex("JobID");
 
@@ -184,7 +183,7 @@ namespace RoveSoPickNPlace.Api.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("ID");
 
-                    b.Property<Guid?>("ComponentDefinitionId")
+                    b.Property<Guid>("ComponentDefinitionId")
                         .HasColumnType("TEXT");
 
                     b.Property<bool?>("IsLoaded")
@@ -216,6 +215,9 @@ namespace RoveSoPickNPlace.Api.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("ID");
 
+                    b.Property<Guid?>("ComponentPlacementRecordID")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ImagePath")
                         .HasColumnType("TEXT");
 
@@ -235,6 +237,9 @@ namespace RoveSoPickNPlace.Api.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("ID");
+
+                    b.HasIndex("ComponentPlacementRecordID")
+                        .IsUnique();
 
                     b.ToTable("InspectionResults");
                 });
@@ -267,9 +272,6 @@ namespace RoveSoPickNPlace.Api.Migrations
                     b.Property<double?>("Progress")
                         .HasColumnType("REAL");
 
-                    b.Property<byte[]>("RowVersion")
-                        .HasColumnType("BLOB");
-
                     b.Property<DateTime?>("StartedAt")
                         .HasColumnType("TEXT");
 
@@ -277,6 +279,8 @@ namespace RoveSoPickNPlace.Api.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("ID");
+
+                    b.HasIndex("CplFileId");
 
                     b.ToTable("Jobs");
                 });
@@ -288,7 +292,7 @@ namespace RoveSoPickNPlace.Api.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("ID");
 
-                    b.Property<Guid?>("JobId")
+                    b.Property<Guid?>("JobID")
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("Level")
@@ -300,12 +304,52 @@ namespace RoveSoPickNPlace.Api.Migrations
                     b.Property<string>("Source")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("Timestamp")
+                    b.Property<DateTime>("Timestamp")
                         .HasColumnType("TEXT");
 
                     b.HasKey("ID");
 
+                    b.HasIndex("JobID");
+
                     b.ToTable("LogEntries");
+                });
+
+            modelBuilder.Entity("RoveSoPickNPlace.Models.Entities.MachineState", b =>
+                {
+                    b.Property<Guid>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ID");
+
+                    b.Property<Guid?>("ActiveJobID")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double?>("CpuTemperatureC")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("CpuUsagePercent")
+                        .HasColumnType("REAL");
+
+                    b.Property<bool?>("GrblConnected")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LastHeartbeat")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double?>("MemoryUsagePercent")
+                        .HasColumnType("REAL");
+
+                    b.Property<bool?>("RaspberryPiConnected")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("ActiveJobID");
+
+                    b.ToTable("MachineState");
                 });
 
             modelBuilder.Entity("RoveSoPickNPlace.Models.Entities.ManualControlCommand", b =>
@@ -345,7 +389,7 @@ namespace RoveSoPickNPlace.Api.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("ID");
 
-                    b.Property<DateTime?>("CreatedAt")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("Level")
@@ -411,7 +455,7 @@ namespace RoveSoPickNPlace.Api.Migrations
                     b.Property<DateTime?>("CalibratedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("CameraID")
+                    b.Property<Guid?>("CameraID")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("DistortionJson")
@@ -422,29 +466,47 @@ namespace RoveSoPickNPlace.Api.Migrations
 
                     b.HasKey("ID");
 
+                    b.HasIndex("CameraID");
+
                     b.ToTable("VisionCalibrations");
+                });
+
+            modelBuilder.Entity("RoveSoPickNPlace.Models.Entities.BOMEntry", b =>
+                {
+                    b.HasOne("RoveSoPickNPlace.Models.Entities.Job", "Job")
+                        .WithMany("BomEntries")
+                        .HasForeignKey("JobID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Job");
                 });
 
             modelBuilder.Entity("RoveSoPickNPlace.Models.Entities.ComponentPlacementRecord", b =>
                 {
-                    b.HasOne("RoveSoPickNPlace.Models.Entities.InspectionResult", "InspectionResult")
-                        .WithMany()
-                        .HasForeignKey("InspectionResultID");
+                    b.HasOne("RoveSoPickNPlace.Models.Entities.ComponentDefinition", "ComponentDefinition")
+                        .WithMany("PlacementRecords")
+                        .HasForeignKey("ComponentDefinitionID")
+                        .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("RoveSoPickNPlace.Models.Entities.Job", null)
+                    b.HasOne("RoveSoPickNPlace.Models.Entities.Job", "Job")
                         .WithMany("Placements")
                         .HasForeignKey("JobID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("InspectionResult");
+                    b.Navigation("ComponentDefinition");
+
+                    b.Navigation("Job");
                 });
 
             modelBuilder.Entity("RoveSoPickNPlace.Models.Entities.Feeder", b =>
                 {
                     b.HasOne("RoveSoPickNPlace.Models.Entities.ComponentDefinition", "ComponentDefinition")
                         .WithMany()
-                        .HasForeignKey("ComponentDefinitionId");
+                        .HasForeignKey("ComponentDefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.OwnsOne("RoveSoPickNPlace.Models.Entities.Position", "PickupPosition", b1 =>
                         {
@@ -452,16 +514,20 @@ namespace RoveSoPickNPlace.Api.Migrations
                                 .HasColumnType("TEXT");
 
                             b1.Property<double?>("Rotation")
-                                .HasColumnType("REAL");
+                                .HasColumnType("REAL")
+                                .HasColumnName("PickupPosition_Rotation");
 
                             b1.Property<double?>("X")
-                                .HasColumnType("REAL");
+                                .HasColumnType("REAL")
+                                .HasColumnName("PickupPosition_X");
 
                             b1.Property<double?>("Y")
-                                .HasColumnType("REAL");
+                                .HasColumnType("REAL")
+                                .HasColumnName("PickupPosition_Y");
 
                             b1.Property<double?>("Z")
-                                .HasColumnType("REAL");
+                                .HasColumnType("REAL")
+                                .HasColumnName("PickupPosition_Z");
 
                             b1.HasKey("FeederID");
 
@@ -476,9 +542,114 @@ namespace RoveSoPickNPlace.Api.Migrations
                     b.Navigation("PickupPosition");
                 });
 
+            modelBuilder.Entity("RoveSoPickNPlace.Models.Entities.InspectionResult", b =>
+                {
+                    b.HasOne("RoveSoPickNPlace.Models.Entities.ComponentPlacementRecord", "ComponentPlacementRecord")
+                        .WithOne("InspectionResult")
+                        .HasForeignKey("RoveSoPickNPlace.Models.Entities.InspectionResult", "ComponentPlacementRecordID")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("ComponentPlacementRecord");
+                });
+
             modelBuilder.Entity("RoveSoPickNPlace.Models.Entities.Job", b =>
                 {
+                    b.HasOne("RoveSoPickNPlace.Models.Entities.UploadedFile", "CplFile")
+                        .WithMany("JobsReferencing")
+                        .HasForeignKey("CplFileId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("CplFile");
+                });
+
+            modelBuilder.Entity("RoveSoPickNPlace.Models.Entities.LogEntry", b =>
+                {
+                    b.HasOne("RoveSoPickNPlace.Models.Entities.Job", "Job")
+                        .WithMany("LogEntries")
+                        .HasForeignKey("JobID")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Job");
+                });
+
+            modelBuilder.Entity("RoveSoPickNPlace.Models.Entities.MachineState", b =>
+                {
+                    b.HasOne("RoveSoPickNPlace.Models.Entities.Job", "ActiveJob")
+                        .WithMany()
+                        .HasForeignKey("ActiveJobID")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.OwnsOne("RoveSoPickNPlace.Models.Entities.Position", "CurrentPosition", b1 =>
+                        {
+                            b1.Property<Guid>("MachineStateID")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<double?>("Rotation")
+                                .HasColumnType("REAL")
+                                .HasColumnName("CurrentPosition_Rotation");
+
+                            b1.Property<double?>("X")
+                                .HasColumnType("REAL")
+                                .HasColumnName("CurrentPosition_X");
+
+                            b1.Property<double?>("Y")
+                                .HasColumnType("REAL")
+                                .HasColumnName("CurrentPosition_Y");
+
+                            b1.Property<double?>("Z")
+                                .HasColumnType("REAL")
+                                .HasColumnName("CurrentPosition_Z");
+
+                            b1.HasKey("MachineStateID");
+
+                            b1.ToTable("MachineState");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MachineStateID");
+                        });
+
+                    b.Navigation("ActiveJob");
+
+                    b.Navigation("CurrentPosition");
+                });
+
+            modelBuilder.Entity("RoveSoPickNPlace.Models.Entities.VisionCalibration", b =>
+                {
+                    b.HasOne("RoveSoPickNPlace.Models.Entities.CameraFeed", "Camera")
+                        .WithMany("Calibrations")
+                        .HasForeignKey("CameraID")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Camera");
+                });
+
+            modelBuilder.Entity("RoveSoPickNPlace.Models.Entities.CameraFeed", b =>
+                {
+                    b.Navigation("Calibrations");
+                });
+
+            modelBuilder.Entity("RoveSoPickNPlace.Models.Entities.ComponentDefinition", b =>
+                {
+                    b.Navigation("PlacementRecords");
+                });
+
+            modelBuilder.Entity("RoveSoPickNPlace.Models.Entities.ComponentPlacementRecord", b =>
+                {
+                    b.Navigation("InspectionResult");
+                });
+
+            modelBuilder.Entity("RoveSoPickNPlace.Models.Entities.Job", b =>
+                {
+                    b.Navigation("BomEntries");
+
+                    b.Navigation("LogEntries");
+
                     b.Navigation("Placements");
+                });
+
+            modelBuilder.Entity("RoveSoPickNPlace.Models.Entities.UploadedFile", b =>
+                {
+                    b.Navigation("JobsReferencing");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,11 +1,3 @@
-/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/obj/Debug/net8.0/RoveSoPickNPlace.Api.csproj.AssemblyReference.cache
-/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/obj/Debug/net8.0/RoveSoPickNPlace.Api.GeneratedMSBuildEditorConfig.editorconfig
-/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/obj/Debug/net8.0/RoveSoPickNPlace.Api.AssemblyInfoInputs.cache
-/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/obj/Debug/net8.0/RoveSoPickNPlace.Api.AssemblyInfo.cs
-/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/obj/Debug/net8.0/RoveSoPickNPlace.Api.csproj.CoreCompileInputs.cache
-/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/obj/Debug/net8.0/RoveSoPickNPlace.Api.MvcApplicationPartsAssemblyInfo.cs
-/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/obj/Debug/net8.0/RoveSoPickNPlace.Api.MvcApplicationPartsAssemblyInfo.cache
-/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/obj/Debug/net8.0/RoveSoPickNPlace.Api.sourcelink.json
 /workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/bin/Debug/net8.0/appsettings.Development.json
 /workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/bin/Debug/net8.0/appsettings.json
 /workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/bin/Debug/net8.0/RoveSoPickNPlace.Api
@@ -281,6 +273,14 @@
 /workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/bin/Debug/net8.0/runtimes/browser/lib/net8.0/System.Text.Encodings.Web.dll
 /workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/bin/Debug/net8.0/RoveSoPickNPlace.Models.dll
 /workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/bin/Debug/net8.0/RoveSoPickNPlace.Models.pdb
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/obj/Debug/net8.0/RoveSoPickNPlace.Api.csproj.AssemblyReference.cache
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/obj/Debug/net8.0/RoveSoPickNPlace.Api.GeneratedMSBuildEditorConfig.editorconfig
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/obj/Debug/net8.0/RoveSoPickNPlace.Api.AssemblyInfoInputs.cache
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/obj/Debug/net8.0/RoveSoPickNPlace.Api.AssemblyInfo.cs
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/obj/Debug/net8.0/RoveSoPickNPlace.Api.csproj.CoreCompileInputs.cache
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/obj/Debug/net8.0/RoveSoPickNPlace.Api.MvcApplicationPartsAssemblyInfo.cs
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/obj/Debug/net8.0/RoveSoPickNPlace.Api.MvcApplicationPartsAssemblyInfo.cache
+/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/obj/Debug/net8.0/RoveSoPickNPlace.Api.sourcelink.json
 /workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/obj/Debug/net8.0/staticwebassets.build.json
 /workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/obj/Debug/net8.0/staticwebassets.development.json
 /workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Api/obj/Debug/net8.0/staticwebassets/msbuild.RoveSoPickNPlace.Api.Microsoft.AspNetCore.StaticWebAssets.props

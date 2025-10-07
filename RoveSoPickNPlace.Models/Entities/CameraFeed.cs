@@ -19,5 +19,7 @@ namespace RoveSoPickNPlace.Models.Entities
         public int? Fps { get; set; }
         public string? Resolution { get; set; }
         public DateTime? LastFrameAt { get; set; }
+
+        public List<VisionCalibration>? Calibrations { get; set; } = new();
     }
 }

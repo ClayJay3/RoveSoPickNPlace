@@ -15,11 +15,18 @@ namespace RoveSoPickNPlace.Models.Entities
         public MachineStatus? Status { get; set; }
         public bool? GrblConnected { get; set; }
         public bool? RaspberryPiConnected { get; set; }
+
+        // Owned value object
         public Position? CurrentPosition { get; set; }
+
         public double? CpuTemperatureC { get; set; }
         public double? CpuUsagePercent { get; set; }
         public double? MemoryUsagePercent { get; set; }
-        public Guid? ActiveJobId { get; set; }
+
+        // optional active job
+        public Guid? ActiveJobID { get; set; }
+        public Job? ActiveJob { get; set; }
+
         public DateTime? LastHeartbeat { get; set; }
     }
 }

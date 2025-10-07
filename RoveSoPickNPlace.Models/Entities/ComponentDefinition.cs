@@ -22,5 +22,7 @@ namespace RoveSoPickNPlace.Models.Entities
         public string? TapeOrientationCode { get; set; } // M1, C1 etc.
         public bool VisionAlignmentRequired { get; set; }
         public string? Notes { get; set; }
+
+        public List<ComponentPlacementRecord> PlacementRecords { get; set; } = new();
     }
 }

@@ -19,5 +19,8 @@ namespace RoveSoPickNPlace.Models.Entities
         public bool? Parsed { get; set; }
         public string? ParsingErrors { get; set; }
         public string? BoardName { get; set; }           // optional metadata
+
+        // optional reverse nav: jobs that reference this file (in practice likely 0..1)
+        public List<Job>? JobsReferencing { get; set; }
     }
 }

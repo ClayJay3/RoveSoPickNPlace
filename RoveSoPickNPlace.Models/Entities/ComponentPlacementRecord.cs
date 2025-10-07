@@ -12,7 +12,11 @@ namespace RoveSoPickNPlace.Models.Entities
     {
         public Guid ID { get; set; }
         public Guid JobID { get; set; }
-        public Guid ComponentDefinitionID { get; set; }
+        public Job? Job { get; set; }
+
+        public Guid? ComponentDefinitionID { get; set; }
+        public ComponentDefinition? ComponentDefinition { get; set; }
+
         public int? FeederSlot { get; set; }
         public double? TargetX { get; set; }
         public double? TargetY { get; set; }
@@ -22,7 +26,9 @@ namespace RoveSoPickNPlace.Models.Entities
         public double? PlacedRotation { get; set; }
         public bool? Success { get; set; }
         public bool? CorrectionApplied { get; set; }
-        public DateTime? PlacedAt { get; set; }
+        public DateTime? PlacedAt { get; set; } = DateTime.UtcNow;
+
+        // 1:1 relationship (optional)
         public InspectionResult? InspectionResult { get; set; }
     }
 }

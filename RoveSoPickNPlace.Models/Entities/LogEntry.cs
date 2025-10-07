@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using RoveSoPickNPlace.Models.Enums;
 
-
 namespace RoveSoPickNPlace.Models.Entities
 {
     /// <summary>
@@ -13,10 +12,13 @@ namespace RoveSoPickNPlace.Models.Entities
     public class LogEntry
     {
         public Guid ID { get; set; }
-        public DateTime? Timestamp { get; set; }
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
         public LogLevel? Level { get; set; }
         public string? Source { get; set; }            // GRBL, Vision, Web
         public string? Message { get; set; }
-        public Guid? JobId { get; set; }
+
+        // optional link to Job
+        public Guid? JobID { get; set; }
+        public Job? Job { get; set; }
     }
 }
