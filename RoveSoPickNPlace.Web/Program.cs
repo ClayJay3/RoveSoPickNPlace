@@ -23,15 +23,9 @@ builder.Services.AddRadzenCookieThemeService(options =>
             options.Duration = TimeSpan.FromDays(365); // The duration of the cookie.
         });
 // Add the services.
+builder.Services.AddHttpClient<JobService>();
+builder.Services.AddSingleton<JobService>();
 builder.Services.AddScoped<CookieService>();
-
-// HttpClient for API requests.
-var baseApiUrl = builder.Configuration["ApiSettings:BaseUrl"];
-builder.Services.AddScoped(sp => new HttpClient
-{
-    BaseAddress = new Uri(baseApiUrl!)
-});
-
 builder.Services.AddBlazoredToast();
 
 var app = builder.Build();
