@@ -30,8 +30,16 @@ build_property._RazorSourceGeneratorDebug =
 build_metadata.AdditionalFiles.TargetPath = Q29yZS9BcHAucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Web/Core/Pages/CPRTest.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29yZS9QYWdlcy9DUFJUZXN0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Web/Core/Pages/Error.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29yZS9QYWdlcy9FcnJvci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Web/Core/Pages/JobTest.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29yZS9QYWdlcy9Kb2JUZXN0LnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [/workspaces/RoveSoPickNPlace/RoveSoPickNPlace.Web/Core/Pages/Main.razor]

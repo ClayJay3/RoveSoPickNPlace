@@ -1,0 +1,691 @@
+@page "/componentplacementtest"
+@implements IDisposable
+@using System.Text.Json
+@using System.Reflection
+@using System.Globalization
+@using RoveSoPickNPlace.Models.Entities
+@using RoveSoPickNPlace.Web.Core.Services
+@inject ComponentPlacementRecordService ComponentPlacementRecordService
+
+<h1 class="text-center">ComponentPlacementRecord — Service & API Tester</h1>
+
+<div class="mb-3">
+    <button class="btn btn-primary me-2" @onclick="RefreshRecordsAsync">Refresh Records</button>
+    <button class="btn btn-secondary me-2" @onclick="LoadSelectedRecordToForm">Load Selected Record</button>
+    <button class="btn btn-danger" @onclick="ClearForm">Clear Form</button>
+</div>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="alert alert-danger">@ErrorMessage</div>
+}
+@if (!string.IsNullOrEmpty(SuccessMessage))
+{
+    <div class="alert alert-success">@SuccessMessage</div>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <h4>Records (from ComponentPlacementRecordService)</h4>
+        <div>
+            @if (Records is null || Records.Count == 0)
+            {
+                <div><em>No records loaded. Click "Refresh Records".</em></div>
+            }
+            else
+            {
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width:220px">ID</th>
+                            <th>Preview (includes nested objects)</th>
+                            <th style="width:220px">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Records)
+                        {
+                            <tr class="@(TryGetRecordId(r) == SelectedRecordId ? "table-primary" : null)">
+                                <td style="vertical-align: middle;">@GetRecordIdString(r)</td>
+                                <td>
+                                    <pre style="max-height:160px;overflow:auto;margin:0;font-size:0.8rem;">@GetRecordPreviewJson(r)</pre>
+                                    @if (r.Job is not null)
+                                    {
+                                        <small class="text-muted">Linked Job ID: @r.Job.ID</small>
+                                    }
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => SelectRecord(r)">Select</button>
+                                    <button class="btn btn-sm btn-outline-info me-1" @onclick="() => LoadRecordToForm(r)">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteRecordAsync(r)">Delete</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <h4>@(IsEditing ? "Edit ComponentPlacementRecord" : "Add New ComponentPlacementRecord")</h4>
+
+        <div class="mb-2">
+            <label class="form-label">Selected Record ID: </label>
+            <div><strong>@(SelectedRecordId?.ToString() ?? "<none>")</strong></div>
+        </div>
+
+        @if (RecordProperties is null || RecordProperties.Count == 0)
+        {
+            <div class="alert alert-warning">No supported record fields found to render a form. (Only primitive/nullable/enum fields are shown.)</div>
+        }
+        else
+        {
+            <div>
+                @foreach (var prop in RecordProperties)
+                {
+                    <div class="mb-3">
+                        <label class="form-label">@prop.Name</label>
+                        @RenderInputFor(prop)
+                        @if (FieldErrors.ContainsKey(prop.Name))
+                        {
+                            <div class="text-danger small">@FieldErrors[prop.Name]</div>
+                        }
+                    </div>
+                }
+
+                <div class="d-flex gap-2">
+                    <button class="btn btn-success" @onclick="AddFromFormAsync">Add (PUT)</button>
+                    <button class="btn btn-warning" @onclick="UpdateFromFormAsync" disabled="@(SelectedRecordId is null)">Update (POST)</button>
+                    <button class="btn btn-danger" @onclick="DeleteSelectedAsync" disabled="@(SelectedRecordId is null)">Delete Selected</button>
+                </div>
+            </div>
+        }
+
+        <div class="mt-3">
+            <small class="text-muted">This form is generated from the server-side `ComponentPlacementRecord` type. Only simple fields are shown — nested objects (Job, ComponentDefinition, InspectionResult) are shown in the preview JSON only.</small>
+        </div>
+    </div>
+</div>
+
+@code {
+    // Local view state
+    private List<ComponentPlacementRecord>? Records;
+    private Guid? SelectedRecordId;
+    private string ErrorMessage = "";
+    private string SuccessMessage = "";
+    private bool IsEditing => SelectedRecordId is not null;
+
+    // Reflection-driven form
+    private List<PropertyInfo> RecordProperties = new();
+    private Dictionary<string, string> FieldValues = new();
+    private Dictionary<string, string> FieldErrors = new();
+
+    // Json serializer options for preview only (not user-facing)
+    private readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        WriteIndented = true,
+        PropertyNameCaseInsensitive = true
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            ComponentPlacementRecordService.SubscribeToComponentPlacementRecordChanges(OnRecordsChanged);
+        }
+        catch
+        {
+            // swallow subscription errors
+        }
+
+        BuildRecordFormMetadata();
+        await SafeRefreshRecordsAsync();
+    }
+
+    private void BuildRecordFormMetadata()
+    {
+        FieldValues.Clear();
+        FieldErrors.Clear();
+
+        var recordType = typeof(ComponentPlacementRecord);
+        // Select writable properties of supported primitive-ish types
+        RecordProperties = recordType
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => p.CanWrite && IsSupportedFormType(p.PropertyType))
+            .OrderBy(p => p.Name == "ID" ? -1 : 0) // prefer ID first
+            .ThenBy(p => p.Name)
+            .ToList();
+
+        foreach (var prop in RecordProperties)
+        {
+            FieldValues[prop.Name] = ""; // initialize empty
+        }
+    }
+
+    private static bool IsSupportedFormType(Type t)
+    {
+        var u = Nullable.GetUnderlyingType(t) ?? t;
+        if (u.IsEnum) return true;
+
+        return u == typeof(string)
+            || u == typeof(Guid)
+            || u == typeof(DateTime)
+            || u == typeof(bool)
+            || u == typeof(int)
+            || u == typeof(long)
+            || u == typeof(double)
+            || u == typeof(float)
+            || u == typeof(decimal)
+            || u == typeof(short)
+            || u == typeof(byte);
+    }
+
+    private RenderFragment RenderInputFor(PropertyInfo prop) => builder =>
+    {
+        var seq = 0;
+        var name = prop.Name;
+        var t = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+
+        if (t == typeof(bool))
+        {
+            // Checkbox
+            builder.OpenElement(seq++, "div");
+            builder.AddAttribute(seq++, "class", "form-check");
+            builder.OpenElement(seq++, "input");
+            builder.AddAttribute(seq++, "class", "form-check-input");
+            builder.AddAttribute(seq++, "type", "checkbox");
+            builder.AddAttribute(seq++, "checked", GetBoolField(name));
+            builder.AddAttribute(seq++, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e =>
+            {
+                var sval = (e.Value is bool b) ? b.ToString() : (e.Value?.ToString() ?? "false");
+                SetFieldValue(name, sval);
+            }));
+            builder.CloseElement();
+            builder.OpenElement(seq++, "label");
+            builder.AddAttribute(seq++, "class", "form-check-label ms-2");
+            builder.AddContent(seq++, " ");
+            builder.AddContent(seq++, t.Name);
+            builder.CloseElement();
+            builder.CloseElement();
+        }
+        else if (t == typeof(DateTime))
+        {
+            builder.OpenElement(seq++, "input");
+            builder.AddAttribute(seq++, "class", "form-control");
+            builder.AddAttribute(seq++, "type", "datetime-local");
+            builder.AddAttribute(seq++, "value", GetFieldValue(name));
+            builder.AddAttribute(seq++, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e => SetFieldValue(name, e.Value?.ToString() ?? "")));
+            builder.CloseElement();
+        }
+        else if (t == typeof(Guid))
+        {
+            builder.OpenElement(seq++, "input");
+            builder.AddAttribute(seq++, "class", "form-control");
+            builder.AddAttribute(seq++, "type", "text");
+            builder.AddAttribute(seq++, "value", GetFieldValue(name));
+            builder.AddAttribute(seq++, "placeholder", name == "ID" ? "leave blank to auto-generate on Add" : "");
+            builder.AddAttribute(seq++, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e => SetFieldValue(name, e.Value?.ToString() ?? "")));
+            builder.CloseElement();
+        }
+        else if (t.IsEnum)
+        {
+            // dropdown select
+            builder.OpenElement(seq++, "select");
+            builder.AddAttribute(seq++, "class", "form-select");
+            builder.AddAttribute(seq++, "value", GetFieldValue(name));
+            builder.AddAttribute(seq++, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e => SetFieldValue(name, e.Value?.ToString() ?? "")));
+            // empty option
+            builder.OpenElement(seq++, "option");
+            builder.AddAttribute(seq++, "value", "");
+            builder.AddContent(seq++, "<none>");
+            builder.CloseElement();
+
+            foreach (var enumName in Enum.GetNames(t))
+            {
+                builder.OpenElement(seq++, "option");
+                builder.AddAttribute(seq++, "value", enumName);
+                if (GetFieldValue(name) == enumName) builder.AddAttribute(seq++, "selected", true);
+                builder.AddContent(seq++, enumName);
+                builder.CloseElement();
+            }
+            builder.CloseElement();
+        }
+        else if (t == typeof(int) || t == typeof(long) || t == typeof(double) || t == typeof(float) || t == typeof(decimal) || t == typeof(short) || t == typeof(byte))
+        {
+            builder.OpenElement(seq++, "input");
+            builder.AddAttribute(seq++, "class", "form-control");
+            builder.AddAttribute(seq++, "type", "number");
+            builder.AddAttribute(seq++, "value", GetFieldValue(name));
+            builder.AddAttribute(seq++, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e => SetFieldValue(name, e.Value?.ToString() ?? "")));
+            builder.CloseElement();
+        }
+        else
+        {
+            // fallback to text input (strings and others)
+            builder.OpenElement(seq++, "input");
+            builder.AddAttribute(seq++, "class", "form-control");
+            builder.AddAttribute(seq++, "type", "text");
+            builder.AddAttribute(seq++, "value", GetFieldValue(name));
+            builder.AddAttribute(seq++, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e => SetFieldValue(name, e.Value?.ToString() ?? "")));
+            builder.CloseElement();
+        }
+    };
+
+    private string GetFieldValue(string name)
+    {
+        if (FieldValues.TryGetValue(name, out var v)) return v ?? "";
+        return "";
+    }
+
+    private bool GetBoolField(string name)
+    {
+        var s = GetFieldValue(name);
+        if (bool.TryParse(s, out var b)) return b;
+        return false;
+    }
+
+    private void SetFieldValue(string name, string value)
+    {
+        FieldValues[name] = value ?? "";
+        if (FieldErrors.ContainsKey(name)) FieldErrors.Remove(name);
+        StateHasChanged();
+    }
+
+    private async Task SafeRefreshRecordsAsync()
+    {
+        ErrorMessage = "";
+        SuccessMessage = "";
+        try
+        {
+            await ComponentPlacementRecordService.RefreshComponentPlacementRecords();
+            Records = ComponentPlacementRecordService.GetComponentPlacementRecords();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Refresh failed: {ex.Message}";
+        }
+    }
+
+    private async Task RefreshRecordsAsync()
+    {
+        await SafeRefreshRecordsAsync();
+        if (string.IsNullOrEmpty(ErrorMessage))
+        {
+            SuccessMessage = "Records refreshed.";
+            await Task.Delay(1200);
+            SuccessMessage = "";
+        }
+    }
+
+    private async Task OnRecordsChanged()
+    {
+        try
+        {
+            Records = ComponentPlacementRecordService.GetComponentPlacementRecords();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch
+        {
+            // ignore
+        }
+    }
+
+    private string GetRecordPreviewJson(ComponentPlacementRecord r)
+    {
+        try
+        {
+            var full = JsonSerializer.Serialize(r, _jsonOptions);
+            if (full.Length > 900) return full.Substring(0, 900) + " ...";
+            return full;
+        }
+        catch
+        {
+            return "<unable to serialize record>";
+        }
+    }
+
+    private string GetRecordIdString(ComponentPlacementRecord r)
+    {
+        try
+        {
+            var idProp = r.GetType().GetProperty("ID");
+            if (idProp is not null)
+            {
+                var val = idProp.GetValue(r);
+                return val?.ToString() ?? "<null>";
+            }
+        }
+        catch { }
+        return r.ToString() ?? "<record>";
+    }
+
+    private void SelectRecord(ComponentPlacementRecord r)
+    {
+        SelectedRecordId = TryGetRecordId(r);
+        SuccessMessage = $"Selected record {(SelectedRecordId?.ToString() ?? "<unknown>")}";
+        ErrorMessage = "";
+        LoadRecordToForm(r);
+    }
+
+    private Guid? TryGetRecordId(ComponentPlacementRecord r)
+    {
+        try
+        {
+            var idProp = r.GetType().GetProperty("ID");
+            if (idProp is not null)
+            {
+                var val = idProp.GetValue(r);
+                if (val is Guid g) return g;
+                if (Guid.TryParse(val?.ToString() ?? "", out var parsed)) return parsed;
+            }
+        }
+        catch { }
+        return null;
+    }
+
+    private void LoadRecordToForm(ComponentPlacementRecord r)
+    {
+        foreach (var prop in RecordProperties)
+        {
+            try
+            {
+                var val = prop.GetValue(r);
+                if (val is null)
+                {
+                    FieldValues[prop.Name] = "";
+                }
+                else if (val is DateTime dt)
+                {
+                    // format for datetime-local input: "yyyy-MM-ddTHH:mm"
+                    FieldValues[prop.Name] = dt.ToString("yyyy-MM-ddTHH:mm");
+                }
+                else
+                {
+                    FieldValues[prop.Name] = val.ToString() ?? "";
+                }
+            }
+            catch
+            {
+                FieldValues[prop.Name] = "";
+            }
+        }
+
+        SelectedRecordId = TryGetRecordId(r);
+    }
+
+    private void LoadSelectedRecordToForm()
+    {
+        if (SelectedRecordId is null)
+        {
+            ErrorMessage = "No record selected.";
+            return;
+        }
+
+        var rec = Records?.FirstOrDefault(r => TryGetRecordId(r) == SelectedRecordId);
+        if (rec is null)
+        {
+            ErrorMessage = "Selected record not found in current list.";
+            return;
+        }
+
+        LoadRecordToForm(rec);
+    }
+
+    private void ClearForm()
+    {
+        foreach (var k in RecordProperties.Select(p => p.Name).ToList())
+        {
+            FieldValues[k] = "";
+        }
+        FieldErrors.Clear();
+        SelectedRecordId = null;
+        ErrorMessage = "";
+        SuccessMessage = "Form cleared.";
+    }
+
+    private (bool ok, object? instance) BuildRecordInstanceFromFields(out List<string> validationMessages, bool isAdd = true)
+    {
+        validationMessages = new();
+        object? instance = null;
+        try
+        {
+            var recordType = typeof(ComponentPlacementRecord);
+            instance = Activator.CreateInstance(recordType);
+            foreach (var prop in RecordProperties)
+            {
+                var name = prop.Name;
+                var raw = GetFieldValue(name)?.Trim() ?? "";
+
+                // Special: ID generation for Add
+                if (name == "ID" && string.IsNullOrEmpty(raw) && isAdd)
+                {
+                    prop.SetValue(instance, Guid.NewGuid());
+                    continue;
+                }
+
+                if (string.IsNullOrEmpty(raw))
+                {
+                    // skip setting; leave null / default
+                    continue;
+                }
+
+                var targetType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+
+                try
+                {
+                    object? parsed = ParseStringToType(raw, targetType);
+                    prop.SetValue(instance, parsed);
+                }
+                catch (Exception ex)
+                {
+                    validationMessages.Add($"Field {name}: could not parse value '{raw}' to {targetType.Name} ({ex.Message})");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            validationMessages.Add($"Failed to create ComponentPlacementRecord instance: {ex.Message}");
+        }
+
+        return (validationMessages.Count == 0, instance);
+    }
+
+    private static object? ParseStringToType(string raw, Type targetType)
+    {
+        if (targetType == typeof(string)) return raw;
+        if (targetType == typeof(Guid))
+        {
+            if (Guid.TryParse(raw, out var g)) return g;
+            throw new FormatException("invalid GUID");
+        }
+        if (targetType == typeof(DateTime))
+        {
+            // accept common formats including local "yyyy-MM-ddTHH:mm"
+            if (DateTime.TryParse(raw, null, DateTimeStyles.AssumeLocal, out var dt)) return dt;
+            throw new FormatException("invalid DateTime");
+        }
+        if (targetType == typeof(bool))
+        {
+            if (bool.TryParse(raw, out var b)) return b;
+            // also accept "1"/"0"
+            if (raw == "1") return true;
+            if (raw == "0") return false;
+            throw new FormatException("invalid boolean");
+        }
+        if (targetType == typeof(int))
+        {
+            if (int.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) return v;
+        }
+        if (targetType == typeof(long))
+        {
+            if (long.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) return v;
+        }
+        if (targetType == typeof(double))
+        {
+            if (double.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) return v;
+        }
+        if (targetType == typeof(float))
+        {
+            if (float.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) return v;
+        }
+        if (targetType == typeof(decimal))
+        {
+            if (decimal.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) return v;
+        }
+        if (targetType.IsEnum)
+        {
+            if (Enum.IsDefined(targetType, raw)) return Enum.Parse(targetType, raw);
+            // try numeric enum parse
+            if (long.TryParse(raw, out var nv)) return Enum.ToObject(targetType, nv);
+        }
+
+        throw new FormatException($"unsupported or invalid format for {targetType.Name}");
+    }
+
+    private async Task AddFromFormAsync()
+    {
+        ErrorMessage = ""; SuccessMessage = ""; FieldErrors.Clear();
+        var (ok, inst) = BuildRecordInstanceFromFields(out var validations, isAdd: true);
+        if (!ok)
+        {
+            foreach (var m in validations) ErrorMessage += m + " ";
+            return;
+        }
+
+        try
+        {
+            if (inst is ComponentPlacementRecord r)
+            {
+                await ComponentPlacementRecordService.AddComponentPlacementRecord(r);
+            }
+            else
+            {
+                // If type isn't assignable for some reason, cast via JSON
+                var json = JsonSerializer.Serialize(inst, _jsonOptions);
+                var rec = JsonSerializer.Deserialize<ComponentPlacementRecord>(json, _jsonOptions);
+                if (rec is null) throw new Exception("Could not map form to ComponentPlacementRecord");
+                await ComponentPlacementRecordService.AddComponentPlacementRecord(rec);
+            }
+
+            Records = ComponentPlacementRecordService.GetComponentPlacementRecords();
+            SuccessMessage = "Add request sent and records refreshed.";
+            ClearForm();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Add failed: {ex.Message}";
+        }
+    }
+
+    private async Task UpdateFromFormAsync()
+    {
+        if (SelectedRecordId is null)
+        {
+            ErrorMessage = "Select a record to update.";
+            return;
+        }
+
+        ErrorMessage = ""; SuccessMessage = ""; FieldErrors.Clear();
+        var (ok, inst) = BuildRecordInstanceFromFields(out var validations, isAdd: false);
+        if (!ok)
+        {
+            foreach (var m in validations) ErrorMessage += m + " ";
+            return;
+        }
+
+        try
+        {
+            ComponentPlacementRecord recordToSend;
+            if (inst is ComponentPlacementRecord r) recordToSend = r;
+            else
+            {
+                var json = JsonSerializer.Serialize(inst, _jsonOptions);
+                var r2 = JsonSerializer.Deserialize<ComponentPlacementRecord>(json, _jsonOptions);
+                if (r2 is null) throw new Exception("Could not map form to ComponentPlacementRecord");
+                recordToSend = r2;
+            }
+
+            // ensure ID present
+            if (TryGetRecordId(recordToSend) == null)
+            {
+                var idProp = typeof(ComponentPlacementRecord).GetProperty("ID");
+                if (idProp is not null && SelectedRecordId is not null) idProp.SetValue(recordToSend, SelectedRecordId.Value);
+            }
+
+            await ComponentPlacementRecordService.UpdateComponentPlacementRecord(recordToSend);
+            Records = ComponentPlacementRecordService.GetComponentPlacementRecords();
+            SuccessMessage = "Update request sent and records refreshed.";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Update failed: {ex.Message}";
+        }
+    }
+
+    private async Task DeleteSelectedAsync()
+    {
+        if (SelectedRecordId is null)
+        {
+            ErrorMessage = "No record selected to delete.";
+            return;
+        }
+
+        try
+        {
+            // Create a lightweight record with only ID set
+            var idProp = typeof(ComponentPlacementRecord).GetProperty("ID");
+            ComponentPlacementRecord? recToDelete = null;
+            if (idProp is not null)
+            {
+                recToDelete = (ComponentPlacementRecord?)Activator.CreateInstance(typeof(ComponentPlacementRecord));
+                idProp.SetValue(recToDelete, SelectedRecordId.Value);
+            }
+
+            if (recToDelete is null)
+            {
+                var rec = Records?.FirstOrDefault(r => TryGetRecordId(r) == SelectedRecordId);
+                if (rec is null) { ErrorMessage = "Could not resolve record to delete."; return; }
+                recToDelete = rec;
+            }
+
+            await ComponentPlacementRecordService.DeleteComponentPlacementRecord(recToDelete);
+            Records = ComponentPlacementRecordService.GetComponentPlacementRecords();
+            SuccessMessage = "Deleted record and refreshed.";
+            ClearForm();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Delete failed: {ex.Message}";
+        }
+    }
+
+    private async Task DeleteRecordAsync(ComponentPlacementRecord r)
+    {
+        ErrorMessage = ""; SuccessMessage = "";
+        try
+        {
+            await ComponentPlacementRecordService.DeleteComponentPlacementRecord(r);
+            Records = ComponentPlacementRecordService.GetComponentPlacementRecords();
+            SuccessMessage = "Deleted record and refreshed.";
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Delete failed: {ex.Message}";
+        }
+    }
+
+    public void Dispose()
+    {
+        try
+        {
+            ComponentPlacementRecordService.UnsubscribeFromComponentPlacementRecordChanges(OnRecordsChanged);
+        }
+        catch
+        {
+            // ignore unsubscribe errors
+        }
+    }
+}

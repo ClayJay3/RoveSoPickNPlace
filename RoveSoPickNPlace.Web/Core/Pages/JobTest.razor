@@ -1,0 +1,693 @@
+@page "/jobtest"
+@implements IDisposable
+@using System.Text.Json
+@using System.Reflection
+@using System.Globalization
+@using RoveSoPickNPlace.Models.Entities
+@using RoveSoPickNPlace.Web.Core.Services
+@inject JobService JobService
+
+<h1 class="text-center">Welcome to RoveSoPickNPlace — JobService Tester</h1>
+
+<div class="mb-3">
+    <button class="btn btn-primary me-2" @onclick="RefreshJobsAsync">Refresh Jobs</button>
+    <button class="btn btn-secondary me-2" @onclick="LoadSelectedJobToForm">Load Selected Job</button>
+    <button class="btn btn-danger" @onclick="ClearForm">Clear Form</button>
+</div>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="alert alert-danger">@ErrorMessage</div>
+}
+@if (!string.IsNullOrEmpty(SuccessMessage))
+{
+    <div class="alert alert-success">@SuccessMessage</div>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <h4>Jobs (from JobService)</h4>
+        <div>
+            @if (Jobs is null || Jobs.Count == 0)
+            {
+                <div><em>No jobs loaded. Click "Refresh Jobs".</em></div>
+            }
+            else
+            {
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Preview</th>
+                            <th style="width: 220px">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var job in Jobs)
+                        {
+                            <tr class="@(TryGetJobId(job) == SelectedJobId ? "table-primary" : null)">
+                                <td style="vertical-align: middle;">@GetJobIdString(job)</td>
+                                <td>
+                                    <pre style="max-height:120px;overflow:auto;margin:0;font-size:0.8rem;">@GetJobPreviewJson(job)</pre>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => SelectJob(job)">Select</button>
+                                    <button class="btn btn-sm btn-outline-info me-1" @onclick="() => LoadJobToForm(job)">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteJobAsync(job)">Delete</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <h4>@(IsEditing ? "Edit Job" : "Add New Job")</h4>
+
+        <div class="mb-2">
+            <label class="form-label">Selected Job ID: </label>
+            <div><strong>@(SelectedJobId?.ToString() ?? "<none>")</strong></div>
+        </div>
+
+        @if (JobProperties is null || JobProperties.Count == 0)
+        {
+            <div class="alert alert-warning">No supported job fields found to render a form. (Only primitive/nullable/enum fields are shown.)</div>
+        }
+        else
+        {
+            <div>
+                @foreach (var prop in JobProperties)
+                {
+                    <div class="mb-3">
+                        <label class="form-label">@prop.Name</label>
+                        @RenderInputFor(prop)
+                        @if (FieldErrors.ContainsKey(prop.Name))
+                        {
+                            <div class="text-danger small">@FieldErrors[prop.Name]</div>
+                        }
+                    </div>
+                }
+
+                <div class="d-flex gap-2">
+                    <button class="btn btn-success" @onclick="AddFromFormAsync">Add (PUT)</button>
+                    <button class="btn btn-warning" @onclick="UpdateFromFormAsync" disabled="@(SelectedJobId is null)">Update (POST)</button>
+                    <button class="btn btn-danger" @onclick="DeleteSelectedAsync" disabled="@(SelectedJobId is null)">Delete Selected</button>
+                </div>
+            </div>
+        }
+
+        <div class="mt-3">
+            <small class="text-muted">This form is generated from the server-side `Job` type. Only simple fields are shown — complex/nested properties are omitted for safety.</small>
+        </div>
+    </div>
+</div>
+
+@code {
+    // Local view state
+    private List<Job>? Jobs;
+    private Guid? SelectedJobId;
+    private string ErrorMessage = "";
+    private string SuccessMessage = "";
+    private bool IsEditing => SelectedJobId is not null;
+
+    // Reflection-driven form
+    private List<PropertyInfo> JobProperties = new();
+    private Dictionary<string, string> FieldValues = new();
+    private Dictionary<string, string> FieldErrors = new();
+
+    // Json serializer options for preview only (not user-facing)
+    private readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        WriteIndented = true,
+        PropertyNameCaseInsensitive = true
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Subscribe to JobService updates
+        try
+        {
+            JobService.SubscribeToJobChanges(OnJobsChanged);
+        }
+        catch
+        {
+            // swallow subscription errors
+        }
+
+        // Build form metadata from Job type.
+        BuildJobFormMetadata();
+
+        // Initial data load
+        await SafeRefreshJobsAsync();
+    }
+
+    private void BuildJobFormMetadata()
+    {
+        FieldValues.Clear();
+        FieldErrors.Clear();
+
+        var jobType = typeof(Job);
+        // Select writable properties of supported primitive-ish types
+        JobProperties = jobType
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => p.CanWrite && IsSupportedFormType(p.PropertyType))
+            .OrderBy(p => p.Name == "ID" ? -1 : 0) // prefer ID first
+            .ThenBy(p => p.Name)
+            .ToList();
+
+        foreach (var prop in JobProperties)
+        {
+            FieldValues[prop.Name] = ""; // initialize empty
+        }
+    }
+
+    private static bool IsSupportedFormType(Type t)
+    {
+        var u = Nullable.GetUnderlyingType(t) ?? t;
+        if (u.IsEnum) return true;
+
+        return u == typeof(string)
+            || u == typeof(Guid)
+            || u == typeof(DateTime)
+            || u == typeof(bool)
+            || u == typeof(int)
+            || u == typeof(long)
+            || u == typeof(double)
+            || u == typeof(float)
+            || u == typeof(decimal)
+            || u == typeof(short)
+            || u == typeof(byte);
+    }
+
+    private RenderFragment RenderInputFor(PropertyInfo prop) => builder =>
+    {
+        var seq = 0;
+        var name = prop.Name;
+        var t = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+
+        if (t == typeof(bool))
+        {
+            // Checkbox
+            builder.OpenElement(seq++, "div");
+            builder.AddAttribute(seq++, "class", "form-check");
+            builder.OpenElement(seq++, "input");
+            builder.AddAttribute(seq++, "class", "form-check-input");
+            builder.AddAttribute(seq++, "type", "checkbox");
+            builder.AddAttribute(seq++, "checked", GetBoolField(name));
+            builder.AddAttribute(seq++, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e =>
+            {
+                var sval = (e.Value is bool b) ? b.ToString() : (e.Value?.ToString() ?? "false");
+                SetFieldValue(name, sval);
+            }));
+            builder.CloseElement();
+            builder.OpenElement(seq++, "label");
+            builder.AddAttribute(seq++, "class", "form-check-label ms-2");
+            builder.AddContent(seq++, " ");
+            builder.AddContent(seq++, t.Name);
+            builder.CloseElement();
+            builder.CloseElement();
+        }
+        else if (t == typeof(DateTime))
+        {
+            builder.OpenElement(seq++, "input");
+            builder.AddAttribute(seq++, "class", "form-control");
+            builder.AddAttribute(seq++, "type", "datetime-local");
+            builder.AddAttribute(seq++, "value", GetFieldValue(name));
+            builder.AddAttribute(seq++, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e => SetFieldValue(name, e.Value?.ToString() ?? "")));
+            builder.CloseElement();
+        }
+        else if (t == typeof(Guid))
+        {
+            builder.OpenElement(seq++, "input");
+            builder.AddAttribute(seq++, "class", "form-control");
+            builder.AddAttribute(seq++, "type", "text");
+            builder.AddAttribute(seq++, "value", GetFieldValue(name));
+            builder.AddAttribute(seq++, "placeholder", name == "ID" ? "leave blank to auto-generate on Add" : "");
+            builder.AddAttribute(seq++, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e => SetFieldValue(name, e.Value?.ToString() ?? "")));
+            builder.CloseElement();
+        }
+        else if (t.IsEnum)
+        {
+            // dropdown select
+            builder.OpenElement(seq++, "select");
+            builder.AddAttribute(seq++, "class", "form-select");
+            builder.AddAttribute(seq++, "value", GetFieldValue(name));
+            builder.AddAttribute(seq++, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e => SetFieldValue(name, e.Value?.ToString() ?? "")));
+            // empty option
+            builder.OpenElement(seq++, "option");
+            builder.AddAttribute(seq++, "value", "");
+            builder.AddContent(seq++, "<none>");
+            builder.CloseElement();
+
+            foreach (var enumName in Enum.GetNames(t))
+            {
+                builder.OpenElement(seq++, "option");
+                builder.AddAttribute(seq++, "value", enumName);
+                if (GetFieldValue(name) == enumName) builder.AddAttribute(seq++, "selected", true);
+                builder.AddContent(seq++, enumName);
+                builder.CloseElement();
+            }
+            builder.CloseElement();
+        }
+        else if (t == typeof(int) || t == typeof(long) || t == typeof(double) || t == typeof(float) || t == typeof(decimal) || t == typeof(short) || t == typeof(byte))
+        {
+            builder.OpenElement(seq++, "input");
+            builder.AddAttribute(seq++, "class", "form-control");
+            builder.AddAttribute(seq++, "type", "number");
+            builder.AddAttribute(seq++, "value", GetFieldValue(name));
+            builder.AddAttribute(seq++, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e => SetFieldValue(name, e.Value?.ToString() ?? "")));
+            builder.CloseElement();
+        }
+        else
+        {
+            // fallback to text input (strings and others)
+            builder.OpenElement(seq++, "input");
+            builder.AddAttribute(seq++, "class", "form-control");
+            builder.AddAttribute(seq++, "type", "text");
+            builder.AddAttribute(seq++, "value", GetFieldValue(name));
+            builder.AddAttribute(seq++, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e => SetFieldValue(name, e.Value?.ToString() ?? "")));
+            builder.CloseElement();
+        }
+    };
+
+    private string GetFieldValue(string name)
+    {
+        if (FieldValues.TryGetValue(name, out var v)) return v ?? "";
+        return "";
+    }
+
+    private bool GetBoolField(string name)
+    {
+        var s = GetFieldValue(name);
+        if (bool.TryParse(s, out var b)) return b;
+        return false;
+    }
+
+    private void SetFieldValue(string name, string value)
+    {
+        FieldValues[name] = value ?? "";
+        if (FieldErrors.ContainsKey(name)) FieldErrors.Remove(name);
+        StateHasChanged();
+    }
+
+    private async Task SafeRefreshJobsAsync()
+    {
+        ErrorMessage = "";
+        SuccessMessage = "";
+        try
+        {
+            await JobService.RefreshJobs();
+            Jobs = JobService.GetJobs();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Refresh failed: {ex.Message}";
+        }
+    }
+
+    private async Task RefreshJobsAsync()
+    {
+        await SafeRefreshJobsAsync();
+        if (string.IsNullOrEmpty(ErrorMessage))
+        {
+            SuccessMessage = "Jobs refreshed.";
+            await Task.Delay(1200);
+            SuccessMessage = "";
+        }
+    }
+
+    private async Task OnJobsChanged()
+    {
+        try
+        {
+            Jobs = JobService.GetJobs();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch
+        {
+            // ignore
+        }
+    }
+
+    private string GetJobPreviewJson(Job job)
+    {
+        try
+        {
+            var full = JsonSerializer.Serialize(job, _jsonOptions);
+            if (full.Length > 600) return full.Substring(0, 600) + " ...";
+            return full;
+        }
+        catch
+        {
+            return "<unable to serialize job>";
+        }
+    }
+
+    private string GetJobIdString(Job job)
+    {
+        try
+        {
+            var idProp = job.GetType().GetProperty("ID");
+            if (idProp is not null)
+            {
+                var val = idProp.GetValue(job);
+                return val?.ToString() ?? "<null>";
+            }
+        }
+        catch { }
+        return job.ToString() ?? "<job>";
+    }
+
+    private void SelectJob(Job job)
+    {
+        SelectedJobId = TryGetJobId(job);
+        SuccessMessage = $"Selected job {(SelectedJobId?.ToString() ?? "<unknown>")}";
+        ErrorMessage = "";
+        LoadJobToForm(job);
+    }
+
+    private Guid? TryGetJobId(Job job)
+    {
+        try
+        {
+            var idProp = job.GetType().GetProperty("ID");
+            if (idProp is not null)
+            {
+                var val = idProp.GetValue(job);
+                if (val is Guid g) return g;
+                if (Guid.TryParse(val?.ToString() ?? "", out var parsed)) return parsed;
+            }
+        }
+        catch { }
+        return null;
+    }
+
+    private void LoadJobToForm(Job job)
+    {
+        foreach (var prop in JobProperties)
+        {
+            try
+            {
+                var val = prop.GetValue(job);
+                if (val is null)
+                {
+                    FieldValues[prop.Name] = "";
+                }
+                else if (val is DateTime dt)
+                {
+                    // format for datetime-local input: "yyyy-MM-ddTHH:mm"
+                    FieldValues[prop.Name] = dt.ToString("yyyy-MM-ddTHH:mm");
+                }
+                else
+                {
+                    FieldValues[prop.Name] = val.ToString() ?? "";
+                }
+            }
+            catch
+            {
+                FieldValues[prop.Name] = "";
+            }
+        }
+
+        SelectedJobId = TryGetJobId(job);
+    }
+
+    private void LoadSelectedJobToForm()
+    {
+        if (SelectedJobId is null)
+        {
+            ErrorMessage = "No job selected.";
+            return;
+        }
+
+        var job = Jobs?.FirstOrDefault(j => TryGetJobId(j) == SelectedJobId);
+        if (job is null)
+        {
+            ErrorMessage = "Selected job not found in current list.";
+            return;
+        }
+
+        LoadJobToForm(job);
+    }
+
+    private void ClearForm()
+    {
+        foreach (var k in JobProperties.Select(p => p.Name).ToList())
+        {
+            FieldValues[k] = "";
+        }
+        FieldErrors.Clear();
+        SelectedJobId = null;
+        ErrorMessage = "";
+        SuccessMessage = "Form cleared.";
+    }
+
+    private (bool ok, object? instance) BuildJobInstanceFromFields(out List<string> validationMessages, bool isAdd = true)
+    {
+        validationMessages = new();
+        object? instance = null;
+        try
+        {
+            var jobType = typeof(Job);
+            instance = Activator.CreateInstance(jobType);
+            foreach (var prop in JobProperties)
+            {
+                var name = prop.Name;
+                var raw = GetFieldValue(name)?.Trim() ?? "";
+
+                // Special: ID generation for Add
+                if (name == "ID" && string.IsNullOrEmpty(raw) && isAdd)
+                {
+                    prop.SetValue(instance, Guid.NewGuid());
+                    continue;
+                }
+
+                if (string.IsNullOrEmpty(raw))
+                {
+                    // skip setting; leave null / default
+                    continue;
+                }
+
+                var targetType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+
+                try
+                {
+                    object? parsed = ParseStringToType(raw, targetType);
+                    prop.SetValue(instance, parsed);
+                }
+                catch (Exception ex)
+                {
+                    validationMessages.Add($"Field {name}: could not parse value '{raw}' to {targetType.Name} ({ex.Message})");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            validationMessages.Add($"Failed to create Job instance: {ex.Message}");
+        }
+
+        return (validationMessages.Count == 0, instance);
+    }
+
+    private static object? ParseStringToType(string raw, Type targetType)
+    {
+        if (targetType == typeof(string)) return raw;
+        if (targetType == typeof(Guid))
+        {
+            if (Guid.TryParse(raw, out var g)) return g;
+            throw new FormatException("invalid GUID");
+        }
+        if (targetType == typeof(DateTime))
+        {
+            // accept common formats including local "yyyy-MM-ddTHH:mm"
+            if (DateTime.TryParse(raw, null, DateTimeStyles.AssumeLocal, out var dt)) return dt;
+            throw new FormatException("invalid DateTime");
+        }
+        if (targetType == typeof(bool))
+        {
+            if (bool.TryParse(raw, out var b)) return b;
+            // also accept "1"/"0"
+            if (raw == "1") return true;
+            if (raw == "0") return false;
+            throw new FormatException("invalid boolean");
+        }
+        if (targetType == typeof(int))
+        {
+            if (int.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) return v;
+        }
+        if (targetType == typeof(long))
+        {
+            if (long.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) return v;
+        }
+        if (targetType == typeof(double))
+        {
+            if (double.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) return v;
+        }
+        if (targetType == typeof(float))
+        {
+            if (float.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) return v;
+        }
+        if (targetType == typeof(decimal))
+        {
+            if (decimal.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) return v;
+        }
+        if (targetType.IsEnum)
+        {
+            if (Enum.IsDefined(targetType, raw)) return Enum.Parse(targetType, raw);
+            // try numeric enum parse
+            if (long.TryParse(raw, out var nv)) return Enum.ToObject(targetType, nv);
+        }
+
+        throw new FormatException($"unsupported or invalid format for {targetType.Name}");
+    }
+
+    private async Task AddFromFormAsync()
+    {
+        ErrorMessage = ""; SuccessMessage = ""; FieldErrors.Clear();
+        var (ok, inst) = BuildJobInstanceFromFields(out var validations, isAdd: true);
+        if (!ok)
+        {
+            foreach (var m in validations) ErrorMessage += m + " ";
+            return;
+        }
+
+        try
+        {
+            if (inst is Job j)
+            {
+                await JobService.AddJob(j);
+            }
+            else
+            {
+                // If Job type is not assignable (shouldn't happen), attempt to cast via JSON
+                var json = JsonSerializer.Serialize(inst, _jsonOptions);
+                var job = JsonSerializer.Deserialize<Job>(json, _jsonOptions);
+                if (job is null) throw new Exception("Could not map form to Job");
+                await JobService.AddJob(job);
+            }
+
+            Jobs = JobService.GetJobs();
+            SuccessMessage = "Add request sent and jobs refreshed.";
+            ClearForm();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Add failed: {ex.Message}";
+        }
+    }
+
+    private async Task UpdateFromFormAsync()
+    {
+        if (SelectedJobId is null)
+        {
+            ErrorMessage = "Select a job to update.";
+            return;
+        }
+
+        ErrorMessage = ""; SuccessMessage = ""; FieldErrors.Clear();
+        var (ok, inst) = BuildJobInstanceFromFields(out var validations, isAdd: false);
+        if (!ok)
+        {
+            foreach (var m in validations) ErrorMessage += m + " ";
+            return;
+        }
+
+        try
+        {
+            Job jobToSend;
+            if (inst is Job j) jobToSend = j;
+            else
+            {
+                var json = JsonSerializer.Serialize(inst, _jsonOptions);
+                var j2 = JsonSerializer.Deserialize<Job>(json, _jsonOptions);
+                if (j2 is null) throw new Exception("Could not map form to Job");
+                jobToSend = j2;
+            }
+
+            // ensure ID present
+            if (TryGetJobId(jobToSend) == null)
+            {
+                // try to set selected ID
+                var idProp = typeof(Job).GetProperty("ID");
+                if (idProp is not null && SelectedJobId is not null) idProp.SetValue(jobToSend, SelectedJobId.Value);
+            }
+
+            await JobService.UpdateJob(jobToSend);
+            Jobs = JobService.GetJobs();
+            SuccessMessage = "Update request sent and jobs refreshed.";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Update failed: {ex.Message}";
+        }
+    }
+
+    private async Task DeleteSelectedAsync()
+    {
+        if (SelectedJobId is null)
+        {
+            ErrorMessage = "No job selected to delete.";
+            return;
+        }
+
+        try
+        {
+            // Create a lightweight Job with only ID set so JobService.DeleteJob can use it.
+            var idProp = typeof(Job).GetProperty("ID");
+            Job? jobToDelete = null;
+            if (idProp is not null)
+            {
+                jobToDelete = (Job?)Activator.CreateInstance(typeof(Job));
+                idProp.SetValue(jobToDelete, SelectedJobId.Value);
+            }
+
+            if (jobToDelete is null)
+            {
+                // fallback: find the job object in Jobs
+                var job = Jobs?.FirstOrDefault(j => TryGetJobId(j) == SelectedJobId);
+                if (job is null) { ErrorMessage = "Could not resolve job to delete."; return; }
+                jobToDelete = job;
+            }
+
+            await JobService.DeleteJob(jobToDelete);
+            Jobs = JobService.GetJobs();
+            SuccessMessage = "Deleted job and refreshed.";
+            ClearForm();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Delete failed: {ex.Message}";
+        }
+    }
+
+    private async Task DeleteJobAsync(Job job)
+    {
+        ErrorMessage = ""; SuccessMessage = "";
+        try
+        {
+            await JobService.DeleteJob(job);
+            Jobs = JobService.GetJobs();
+            SuccessMessage = "Deleted job and refreshed.";
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Delete failed: {ex.Message}";
+        }
+    }
+
+    public void Dispose()
+    {
+        try
+        {
+            JobService.UnsubscribeFromJobChanges(OnJobsChanged);
+        }
+        catch
+        {
+            // ignore unsubscribe errors
+        }
+    }
+}

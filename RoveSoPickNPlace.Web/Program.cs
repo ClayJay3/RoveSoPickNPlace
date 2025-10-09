@@ -25,6 +25,8 @@ builder.Services.AddRadzenCookieThemeService(options =>
 // Add the services.
 builder.Services.AddHttpClient<JobService>();
 builder.Services.AddSingleton<JobService>();
+builder.Services.AddHttpClient<ComponentPlacementRecordService>();
+builder.Services.AddSingleton<ComponentPlacementRecordService>();
 builder.Services.AddScoped<CookieService>();
 builder.Services.AddBlazoredToast();
 

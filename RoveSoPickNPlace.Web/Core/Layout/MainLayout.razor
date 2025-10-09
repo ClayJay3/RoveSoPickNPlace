@@ -10,20 +10,24 @@
 
 <RadzenComponents />
 <RadzenLayout Style="grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body'">
-        <RadzenHeader>
-            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Style="width: 100%;">
-                <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="10">
-                    <RadzenLabel Text="Home Page" />
-                </RadzenStack>
-                <RadzenDropDown Name="ThemeDropDown" TValue="string" Value="@_ThemeService.Theme" ValueChanged="@ChangeTheme" Data="@Themes.Free" TextProperty=@nameof(Theme.Text) ValueProperty=@nameof(Theme.Value) />
+    <RadzenHeader>
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Style="width: 100%;">
+            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="10">
+                <RadzenLabel Text="Home Page" />
             </RadzenStack>
-            <BlazoredToasts ShowProgressBar="true" Timeout="5" />
-        </RadzenHeader>
-        <RadzenSidebar>
-            <RadzenPanelMenu>
-                <RadzenPanelMenuItem Text="Home" Icon="home" Path="/"/>
-            </RadzenPanelMenu>
-        </RadzenSidebar>
+            <RadzenDropDown Name="ThemeDropDown" TValue="string" Value="@_ThemeService.Theme" ValueChanged="@ChangeTheme" Data="@Themes.Free" TextProperty=@nameof(Theme.Text) ValueProperty=@nameof(Theme.Value) />
+        </RadzenStack>
+        <BlazoredToasts ShowProgressBar="true" Timeout="5" />
+    </RadzenHeader>
+
+    <RadzenSidebar>
+        <RadzenPanelMenu>
+            <RadzenPanelMenuItem Text="Home" Icon="home" Path="/" />
+            <RadzenPanelMenuItem Text="Job Test" Icon="description" Path="/jobtest" />
+            <RadzenPanelMenuItem Text="Component Placement Test" Icon="layers" Path="/componentplacementtest" />
+        </RadzenPanelMenu>
+    </RadzenSidebar>
+
     <RadzenBody>
         <div class="rz-p-4">
             @Body
@@ -39,7 +43,7 @@
 
 @code {
     // Declare a variable to control the sidebar state.
-    
+
     protected override void OnInitialized()
     {
     }
@@ -57,5 +61,10 @@
     {
         _ThemeService.SetTheme(value);
         _ThemeService.SetWcag(true);
+    }
+
+    void NavigateTo(string uri)
+    {
+        NavigationManager.NavigateTo(uri);
     }
 }

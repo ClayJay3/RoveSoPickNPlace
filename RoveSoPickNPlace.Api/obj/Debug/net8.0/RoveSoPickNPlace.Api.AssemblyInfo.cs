@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RoveSoPickNPlace.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2927fa96231b6418acd7bb05a5410a915cb7a9a6")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+25914f25bc98888d8d2672de54eed3e5bbe42370")]
 [assembly: System.Reflection.AssemblyProductAttribute("RoveSoPickNPlace.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RoveSoPickNPlace.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
+using System.ComponentModel;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,7 @@ builder.Services.AddControllers()
     });
 builder.Services.AddDbContext<RoveSoPickNPlaceDatabase>(options => options.UseSqlite(builder.Configuration.GetConnectionString("ROVESOPICKNPLACE_DB")));
 builder.Services.AddScoped<IJobRepository, JobRepository>();
+builder.Services.AddScoped<IComponentPlacementRecordRepository, ComponentPlacementRecordRepository>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
